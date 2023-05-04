@@ -1,8 +1,8 @@
 import typing
 
 from aiohttp import ClientSession, ClientResponse, ClientRequest
-
-from .base import TrackerModel
+from types import TracebackType
+from .base import TrackerModel, ResponseParams
 
 
 
@@ -22,7 +22,12 @@ class TrackerClient:
         self.session = ClientSession(base_url=self._url, raise_for_status=True)
         return self
 
-    async def __aexit__(self, *args, **kwargs):
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[TracebackType],
+    ) -> None:
         await self.session.close()
 
     async def post(
@@ -52,8 +57,8 @@ class TrackerClient:
 
 
     async def handle_response(self, params, request:ClientRequest,  response:ClientResponse, response_model:TrackerModel|None):
-        total_pages = response.headers.get('X-Total-Pages',1)
-        total_items = response.headers.get('X-Total-Count', params[''])   
+        response_pagination = ResponseParams(**response.headers)
         data = await response.json()
-        if len(data) < total_items:
+        if len(data) < response_pagination.total_count:
+            
        

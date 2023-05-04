@@ -17,7 +17,6 @@ def convert_datetime_to_iso_8601(arg: datetime) -> str:
     return arg.astimezone().isoformat(sep="T", timespec="milliseconds")
 
 
-
 class TrackerModel(BaseModel):
     class Config:
         allow_population_by_field_name = True
@@ -35,5 +34,8 @@ class RequestParams(BaseModel):
 
 
 class ResponseParams(BaseModel):
-    total_pages: typing.Optional[int] = Field(..., alias="X-Total-Pages")
-    total_count: typing.Optional[int] = Field(..., alias="X-Total-Count")
+    total_pages: typing.Optional[int] = Field(default=1, alias="X-Total-Pages")
+    total_count: typing.Optional[int] = Field(default=100, alias="X-Total-Count")
+
+    class Config:
+        allow_population_by_field_name = True
