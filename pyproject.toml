@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "sst-yatracker"
+version = "0.1.0"
+description = ""
+authors = ["Rostislav Aleev <rs.aleev@gmail.com>"]
+readme = "README.md"
+packages = [{include = "sst_yatracker"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiohttp = {version = "^3.8.4", extras = ["speedups"]}
+tenacity = "^8.2.2"
+pydantic = "^1.10.7"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+pytest-asyncio = "^0.21.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
