@@ -29,10 +29,10 @@ class TrackerModel(BaseModel):
         allow_population_by_field_name = True
         alias_generator = to_camel_case
         use_enum_values = True
-        allow_mutation = True
         json_encoders = {
             datetime: convert_datetime_to_iso_8601,
         }
+        arbitrary_types_allowed = True
 
 
 class RequestParams(BaseModel):
@@ -50,6 +50,8 @@ class ResponseParams(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+
+
 
 
 class BaseClient:
@@ -93,9 +95,12 @@ class BaseClient:
         :return: _description_
         :rtype: dict |typing.List[dict]| None
         """
-        response = await self.session.request(
+        response = asyncio.create_task(self.session.request(
             "GET", f"/{self._version}/{url}", params=params
-        )
+        ))
+        while not response.done():
+            await asyncio.sleep(0.1)
+        
         return await self._handle_response("GET", url, None, params, response)
 
         # if response.text:
@@ -108,18 +113,20 @@ class BaseClient:
         data: TrackerModel,
         params: typing.Dict[str, typing.Any] | None = None,
     ) -> dict | None:
-        response = await self.session.request(
+        response = asyncio.create_task(self.session.request(
             "POST",
             f"/{self._version}/{url}",
             params=params,
             data=data.json(by_alias=True),
-        )
+        ))
+        while not response.done():
+            await asyncio.sleep(0.1)
         return await self._handle_response(
             "POST",
             f"/{self._version}/{url}",
             data=data,
             params=params,
-            response=response,
+            response=response.result(),
         )
 
     async def _handle_response(

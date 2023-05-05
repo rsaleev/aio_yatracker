@@ -73,10 +73,10 @@ class IssueModel(TrackerModel):
     id:str
     key:str
     version:int
-    last_comment_updated_at:datetime
+    last_comment_updated_at:typing.Optional[datetime]
     summary:str
-    parent:IssueParent
-    aliases: typing.List[str]
+    parent:typing.Optional[IssueParent]
+    aliases: typing.Optional[typing.List[str]]
     description:str
     sprint:typing.Optional[typing.List[IssueSprint]] = []
     type:IssueType
@@ -85,11 +85,11 @@ class IssueModel(TrackerModel):
     followers:typing.Optional[typing.List[IssueFollowers]] = []
     created_by:IssueCreatedBy
     votes:int
-    assignee:typing.Optional[IssueAsignee] = None
+    assignee:typing.Optional[typing.Optional[IssueAsignee]]
     queue:IssueQueue
-    updated_at:datetime
+    updated_at:typing.Optional[datetime]
     status:IssueStatus
-    previous_status:IssuePreviousStatus
+    previous_status:typing.Optional[IssuePreviousStatus]
     favorite:bool
 
 
