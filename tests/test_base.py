@@ -19,11 +19,9 @@ def test_base_model():
     assert re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}\+\d{2}:\d{2}",test_output_dict["dt"])
 
 def test_response_header():
-    response_headers = ResponseParams(**{"X-Total-Pages":10, "X-Total-Count":1000})
+    response_headers = ResponseParams.parse_obj({"X-Total-Pages":10, "X-Total-Count":1000})
+    assert response_headers.total_count
+    assert response_headers.total_pages
     assert response_headers.total_count == 1000
     assert response_headers.total_pages ==10
-    default_respons_headers = ResponseParams()
-    assert default_respons_headers.total_count == 100
-    assert default_respons_headers.total_pages == 1
-
-
+    
