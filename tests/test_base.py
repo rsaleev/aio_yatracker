@@ -1,7 +1,7 @@
 from datetime import datetime
 import re
 import json
-from sst_yatracker.base import TrackerModel, ResponseParams
+from aio_yatracker.base import TrackerModel, ResponseParams
 
 
 class TestModel(TrackerModel):
@@ -25,3 +25,5 @@ def test_response_header():
     default_respons_headers = ResponseParams()
     assert default_respons_headers.total_count == 100
     assert default_respons_headers.total_pages == 1
+
+
