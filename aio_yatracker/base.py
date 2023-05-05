@@ -20,12 +20,16 @@ def convert_datetime_to_iso_8601(arg: datetime) -> str:
     return arg.astimezone().isoformat(sep="T", timespec="milliseconds")
 
 
+def convert_iso_8601_to_datetime(arg: str):
+    return datetime.fromisoformat(arg)
+
+
 class TrackerModel(BaseModel):
     class Config:
         allow_population_by_field_name = True
         alias_generator = to_camel_case
         use_enum_values = True
-        allow_mutating = True
+        allow_mutation = True
         json_encoders = {
             datetime: convert_datetime_to_iso_8601,
         }
@@ -51,6 +55,7 @@ class ResponseParams(BaseModel):
 class BaseClient:
     def __init__(self, token: str, org_id: str):
         self._url = "https://api.tracker.yandex.net"
+        self._version = "v2"
         self._token = token
         self._org_id = org_id
         self._params = {"page": 1, "perPage": 100}
@@ -60,7 +65,9 @@ class BaseClient:
         }
 
     async def __aenter__(self) -> "BaseClient":
-        self.session = ClientSession(base_url=self._url, raise_for_status=True)
+        self.session = ClientSession(
+            base_url=f"{self._url}", raise_for_status=True, headers=self._headers
+        )
         return self
 
     async def __aexit__(
@@ -75,71 +82,96 @@ class BaseClient:
         self,
         url: str,
         params: typing.Dict[str, typing.Any] | None = None,
-        response_model: TrackerModel | None = None,
-    ) -> TrackerModel | None:
-        request_params = RequestParams()
+    ) -> dict | typing.List[dict] | None:
+        """
+        get реализация GET запроса
+
+        :param url: путь endpoint'a
+        :type url: str
+        :param params: параметры запроса, defaults to None
+        :type params: typing.Dict[str, typing.Any] | None, optional
+        :return: _description_
+        :rtype: dict |typing.List[dict]| None
+        """
+        response = await self.session.request(
+            "GET", f"/{self._version}/{url}", params=params
+        )
+        return await self._handle_response("GET", url, None, params, response)
+
+        # if response.text:
+        #     return await response.json()
+        # return
+
+    async def post(
+        self,
+        url: str,
+        data: TrackerModel,
+        params: typing.Dict[str, typing.Any] | None = None,
+    ) -> dict | None:
+        response = await self.session.request(
+            "POST",
+            f"/{self._version}/{url}",
+            params=params,
+            data=data.json(by_alias=True),
+        )
+        return await self._handle_response(
+            "POST",
+            f"/{self._version}/{url}",
+            data=data,
+            params=params,
+            response=response,
+        )
+
+    async def _handle_response(
+        self,
+        method: str,
+        url: str,
+        data: TrackerModel | None,
+        params: typing.Dict[str, typing.Any] | None,
+        response: ClientResponse,
+    ):
+        request_pagination = RequestParams()
         if params:
-            request_params.dict(by_alias=True).update(params)
-        request = self.session.get(url=url, params=request_params)
-        response = await request
-        response_data = await response.json()
-        return response_data
+            request_pagination = RequestParams.parse_obj(params)
+        response_pagination = ResponseParams.parse_obj(response.headers)
+        if (
+            response_pagination.total_count
+            and response_pagination.total_count != request_pagination.per_page
+            and response_pagination.total_pages
+            and response_pagination.total_pages > 1
+        ):
+            expanded, _ = await asyncio.gather(
+                *[
+                    self._retrieve_paginated_data(
+                        method, url, data, params, page, request_pagination.per_page
+                    )
+                    for page in range(1, response_pagination.total_pages + 1)
+                ]
+            )
+            return expanded
+        else:
+            if response.text:
+                return await response.json()
+            else:
+                return
 
-    # async def _handle_response(self, url:str, data:TrackerModel|None, params:typing.Dict[str, typing.Any] | None, response:ClientResponse, response_model: TrackerModel | None):
-    #     response_pagination = ResponseParams(**response.headers)
-    #     response_data = await response.json()
-    #     if (
-    #         response_pagination.total_count
-    #         and response_pagination.total_pages
-    #         and len(response_data) < response_pagination.total_count
-    #         and response_pagination.total_pages > 1
-    #     ):
-    #         tasks = [
-    #             self._retrieve_paginated_data(
-    #                 url,
-    #                 data,
-    #                 params,
-    #                 i,
-    #                 request_params.per_page,
-    #                 self.session.patch,
-    #                 response_model,
-    #             )
-    #             for i in range(2, response_pagination.total_pages)
-    #         ]
-    #         extended = await asyncio.gather(*tasks)
-    #         if response_model:
-    #             return extended.append(response_model.parse_obj(response_data))
-    #         return extended.append(response_data)
-    #     else:
-    #         if response_model:
-    #             return
-
-    # async def _retrieve_paginated_data(
-    #     self,
-    #     url: str,
-    #     data: TrackerModel | None,
-    #     params: typing.Dict[str, typing.Any] | None,
-    #     paginated_page: int,
-    #     paginated_items_per_page: int,
-    #     request: typing.Callable,
-    #     response_model: TrackerModel | None,
-    # ):
-    #     if params:
-    #         params.update(
-    #             RequestParams(
-    #                 page=paginated_page, per_page=paginated_items_per_page
-    #             ).dict(by_alias=True)
-    #         )
-    #     else:
-    #         params = RequestParams(
-    #             page=paginated_page, per_page=paginated_items_per_page
-    #         ).dict(by_alias=True)
-    #     if not data:
-    #         response = await request(url, params)
-    #         if response_model:
-    #             return response_model.parse_obj(await response.json())
-    #         return await response.json()
-    #     else:
-    #         response = await request(url, data, params)
-    #         if response_model:
-    #             return response_model.parse_obj(await response.json())
+    async def _retrieve_paginated_data(
+        self,
+        method,
+        url: str,
+        data: TrackerModel | None,
+        params: typing.Dict[str, typing.Any] | None,
+        paginated_page: int,
+        paginated_items_per_page: int,
+    ):
+        paginated_params = RequestParams(
+            per_page=paginated_items_per_page, page=paginated_page
+        )
+        if params:
+            params.update(paginated_params.dict(by_alias=True))
+        else:
+            params = paginated_params.dict(by_alias=True)
+        response = await self.session.request(
+            method, f"/{self._version}/{url}", params=params
+        )
+        return await response.json()
