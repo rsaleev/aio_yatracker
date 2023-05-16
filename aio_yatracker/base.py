@@ -1,27 +1,14 @@
-import asyncio
 import typing
 from datetime import datetime
 from types import TracebackType
 
 from aiohttp import ClientResponse, ClientSession
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
+from .utils import to_camel_case, convert_datetime_to_iso_8601
 
-
-def to_camel_case(arg: str) -> str:
-    string_split = arg.split("_")
-    return string_split[0] + "".join(word.capitalize() for word in string_split[1:])
-
-
-def to_snake_case(arg: str) -> str:
-    return "".join(["_" + i.lower() if i.isupper() else i for i in arg]).lstrip("_")
-
-
-def convert_datetime_to_iso_8601(arg: datetime) -> str:
-    return arg.astimezone().isoformat(sep="T", timespec="milliseconds")
-
-
-def convert_iso_8601_to_datetime(arg: str):
-    return datetime.fromisoformat(arg)
+DEFAULT_PAGE = 1
+DEFAULT_TOTAL_PAGES = 1
+DEFAULT_TOTAL_COUNT = 50
 
 
 class TrackerModel(BaseModel):
@@ -36,8 +23,8 @@ class TrackerModel(BaseModel):
 
 
 class RequestParams(BaseModel):
-    per_page: int = 100
-    page: int = 1
+    per_page: int = DEFAULT_TOTAL_COUNT
+    page: int = DEFAULT_PAGE
 
     class Config:
         allow_population_by_field_name = True
@@ -45,31 +32,39 @@ class RequestParams(BaseModel):
 
 
 class ResponseParams(BaseModel):
-    total_pages: int | None = Field(default=None, alias="X-Total-Pages")
-    total_count: int | None = Field(default=None, alias="X-Total-Count")
+    total_pages: int = Field(default=DEFAULT_TOTAL_PAGES, alias="X-Total-Pages")
+    total_count: int = Field(default=DEFAULT_TOTAL_COUNT, alias="X-Total-Count")
 
     class Config:
         allow_population_by_field_name = True
 
+    @validator("total_pages")
+    def validate_total_pages(cls, arg):
+        if not arg:
+            return DEFAULT_TOTAL_PAGES
+        return arg
 
+    @validator("total_count")
+    def validate_total_count(cls, arg):
+        if not arg:
+            return DEFAULT_TOTAL_COUNT
+        return arg
 
 
 class BaseClient:
     def __init__(self, token: str, org_id: str):
         self._url = "https://api.tracker.yandex.net"
         self._version = "v2"
-        self._token = token
-        self._org_id = org_id
-        self._params = {"page": 1, "perPage": 100}
+        self._params = RequestParams()
         self._headers = {
-            "Authorization": f"OAuth {self._token}",
-            "X-Org-ID": self._org_id,
+            "Authorization": f"OAuth {token}",
+            "X-Org-ID": org_id,
         }
-
-    async def __aenter__(self) -> "BaseClient":
-        self.session = ClientSession(
+        self._session = ClientSession(
             base_url=f"{self._url}", raise_for_status=True, headers=self._headers
         )
+
+    async def __aenter__(self) -> "BaseClient":
         return self
 
     async def __aexit__(
@@ -78,15 +73,18 @@ class BaseClient:
         exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[TracebackType],
     ) -> None:
-        await self.session.close()
+        await self._session.close()
+
+    async def close(self):
+        await self._session.close()
 
     async def get(
         self,
         url: str,
         params: typing.Dict[str, typing.Any] | None = None,
-    ) -> dict | typing.List[dict] | None:
+    ):
         """
-        get реализация GET запроса
+        get GET запрос
 
         :param url: путь endpoint'a
         :type url: str
@@ -95,90 +93,49 @@ class BaseClient:
         :return: _description_
         :rtype: dict |typing.List[dict]| None
         """
-        response = asyncio.create_task(self.session.request(
-            "GET", f"/{self._version}/{url}", params=params
-        ))
-        while not response.done():
-            await asyncio.sleep(0.1)
-        
-        return await self._handle_response("GET", url, None, params, response)
-
-        # if response.text:
-        #     return await response.json()
-        # return
+        return await self._session.get(f"/{self._version}/{url}", params=params)
 
     async def post(
         self,
         url: str,
+        data: TrackerModel | None,
+        params: typing.Dict[str, typing.Any] | None = None,
+    ) -> ClientResponse:
+        """
+        post POST запрос
+
+        :param url:  путь endpoint'a
+        :type url: str
+        :param data: тело сообщения
+        :type data: TrackerModel
+        :param params: параметры запроса, defaults to None
+        :type params: typing.Dict[str, typing.Any] | None, optional
+        :return: возвращаемое значение
+        :rtype: ClientResponse
+        """
+        if data:
+            return await self._session.post(
+                f"/{self._version}/{url}",
+                params=params,
+                data=data.json(by_alias=True, exclude_unset=True, exclude_none=True),
+            )
+        return await self._session.post(f"/{self._version}/{url}", params=params)
+
+    async def patch(
+        self,
+        url: str,
         data: TrackerModel,
         params: typing.Dict[str, typing.Any] | None = None,
-    ) -> dict | None:
-        response = asyncio.create_task(self.session.request(
-            "POST",
+    ) -> ClientResponse:
+        return await self._session.patch(
             f"/{self._version}/{url}",
             params=params,
-            data=data.json(by_alias=True),
-        ))
-        while not response.done():
-            await asyncio.sleep(0.1)
-        return await self._handle_response(
-            "POST",
-            f"/{self._version}/{url}",
-            data=data,
-            params=params,
-            response=response.result(),
+            data=data.json(by_alias=True, exclude_none=True, exclude_defaults=True),
         )
 
-    async def _handle_response(
+    async def handle_response(
         self,
-        method: str,
-        url: str,
-        data: TrackerModel | None,
-        params: typing.Dict[str, typing.Any] | None,
         response: ClientResponse,
-    ):
-        request_pagination = RequestParams()
-        if params:
-            request_pagination = RequestParams.parse_obj(params)
+    ) -> ResponseParams:
         response_pagination = ResponseParams.parse_obj(response.headers)
-        if (
-            response_pagination.total_count
-            and response_pagination.total_count != request_pagination.per_page
-            and response_pagination.total_pages
-            and response_pagination.total_pages > 1
-        ):
-            expanded, _ = await asyncio.gather(
-                *[
-                    self._retrieve_paginated_data(
-                        method, url, data, params, page, request_pagination.per_page
-                    )
-                    for page in range(1, response_pagination.total_pages + 1)
-                ]
-            )
-            return expanded
-        else:
-            if response.text:
-                return await response.json()
-            else:
-                return
-
-    async def _retrieve_paginated_data(
-        self,
-        method,
-        url: str,
-        data: TrackerModel | None,
-        params: typing.Dict[str, typing.Any] | None,
-        paginated_page: int,
-        paginated_items_per_page: int,
-    ):
-        paginated_params = RequestParams(
-            per_page=paginated_items_per_page, page=paginated_page
-        )
-        if params:
-            params.update(paginated_params.dict(by_alias=True))
-        else:
-            params = paginated_params.dict(by_alias=True)
-        response = await self.session.request(
-            method, f"/{self._version}/{url}", params=params
-        )
-        return await response.json()
+        return response_pagination
