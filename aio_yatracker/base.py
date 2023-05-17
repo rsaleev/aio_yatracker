@@ -4,7 +4,8 @@ from types import TracebackType
 
 from aiohttp import ClientResponse, ClientSession
 from pydantic import BaseModel, Field, validator
-from .utils import to_camel_case, convert_datetime_to_iso_8601
+
+from .utils import convert_datetime_to_iso_8601, to_camel_case
 
 DEFAULT_PAGE = 1
 DEFAULT_TOTAL_PAGES = 1
@@ -83,17 +84,10 @@ class BaseClient:
         url: str,
         params: typing.Dict[str, typing.Any] | None = None,
     ):
-        """
-        get GET запрос
-
-        :param url: путь endpoint'a
-        :type url: str
-        :param params: параметры запроса, defaults to None
-        :type params: typing.Dict[str, typing.Any] | None, optional
-        :return: _description_
-        :rtype: dict |typing.List[dict]| None
-        """
-        return await self._session.get(f"/{self._version}/{url}", params=params)
+        default_params = self._params.dict(by_alias=True)
+        if params:
+            default_params.update(params)
+        return await self._session.get(f"/{self._version}/{url}", params=default_params)
 
     async def post(
         self,
@@ -101,25 +95,18 @@ class BaseClient:
         data: TrackerModel | None,
         params: typing.Dict[str, typing.Any] | None = None,
     ) -> ClientResponse:
-        """
-        post POST запрос
-
-        :param url:  путь endpoint'a
-        :type url: str
-        :param data: тело сообщения
-        :type data: TrackerModel
-        :param params: параметры запроса, defaults to None
-        :type params: typing.Dict[str, typing.Any] | None, optional
-        :return: возвращаемое значение
-        :rtype: ClientResponse
-        """
+        default_params = self._params.dict(by_alias=True)
+        if params:
+            default_params.update(params)
         if data:
             return await self._session.post(
                 f"/{self._version}/{url}",
                 params=params,
                 data=data.json(by_alias=True, exclude_unset=True, exclude_none=True),
             )
-        return await self._session.post(f"/{self._version}/{url}", params=params)
+        return await self._session.post(
+            f"/{self._version}/{url}", params=default_params
+        )
 
     async def patch(
         self,
@@ -127,15 +114,26 @@ class BaseClient:
         data: TrackerModel,
         params: typing.Dict[str, typing.Any] | None = None,
     ) -> ClientResponse:
+        default_params = self._params.dict(by_alias=True)
+        if params:
+            default_params.update(params)
         return await self._session.patch(
             f"/{self._version}/{url}",
-            params=params,
-            data=data.json(by_alias=True, exclude_none=True, exclude_defaults=True),
+            params=default_params,
+            data=data.json(by_alias=True, exclude_none=True),
+        )
+
+    async def delete(
+        self,
+        url: str,
+        params: typing.Dict[str, typing.Any] | None = None,
+    ) -> ClientResponse:
+        return await self._session.delete(
+            f"/{self._version}/{url}",params=params
         )
 
     async def handle_response(
         self,
         response: ClientResponse,
     ) -> ResponseParams:
-        response_pagination = ResponseParams.parse_obj(response.headers)
-        return response_pagination
+        return ResponseParams.parse_obj(response.headers)
