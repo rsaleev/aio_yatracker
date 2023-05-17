@@ -1,6 +1,7 @@
-from typing import Any, Dict, AsyncGenerator
-from aio_yatracker.base import BaseClient, RequestParams
+from typing import Any, AsyncGenerator, Dict, List, NoReturn
 
+from ..base import BaseClient, RequestParams
+from ..common import ChangeType
 from .models import *
 
 
@@ -9,63 +10,71 @@ class Query:
         self._endpoint = "issues"
         self._params = RequestParams()
 
-    async def get_issues_parameters(
+    async def get_parameters(
         self, client: BaseClient, issue_id: str
     ) -> IssueParametersResponse:
         """
-        get_issues_parameters _summary_
+        get_issues_parameters https://cloud.yandex.ru/docs/tracker/concepts/issues/search-issues
 
-        :param client: экземпляр клиента
+        :param client: client instance
         :type client: BaseClient
-        :param issue_id: идентификатор задачи. Пример: QUEUE-10
+        :param issue_id: e.g. QUEUE-1
         :type issue_id: str
         :raises ClientError, ClientConnectionError
-        :return: ответ в случае успешной операции
+        :return: response data
         :rtype: IssueParametersResponse
         """
         url = f"{self._endpoint}/{issue_id}"
         response = await client.get(url, params=self._params.dict(by_alias=True))
-        return IssueParametersResponse.parse_obj(await response.json())
+        response_data = await response.json()
+        response.close()
+        return IssueParametersResponse.parse_obj(response_data)
 
-    async def edit_issue(
+    async def modify(
         self, client: BaseClient, issue_id: str, data: IssueModificationRequest
     ) -> IssueModificationResponse:
         """
-        edit_issue редактировать задачу
+        edit_issue https://cloud.yandex.ru/docs/tracker/concepts/issues/patch-issue
 
-        :param client: экземпляр клиента
+        :param client: client instance
         :type client: BaseClient
-        :param issue_id: идентификатор задачи. Пример: "QUEUE-10"
+        :param issue_id: e.g. "QUEUE-1"
         :type issue_id: str
-        :param data: тело запроса
+        :param data: request body
         :type data: IssueModificationRequest
-        :raises ClientError, ClientConnectionError
-        :return: ответ в случае успешной операции
+        :raises ClientError
+        :raises ClientConnectionError
+        :return: response data
         :rtype: IssueModificationResponse
         """
         url = f"{self._endpoint}/{issue_id}"
         response = await client.patch(url=url, data=data)
-        return IssueModificationResponse.parse_obj(await response.json())
+        response_data = await response.json()
+        response.close()
+        return IssueModificationResponse.parse_obj(response_data)
 
-    async def create_issue(
+    async def create(
         self, client: BaseClient, data: IssueCreationRequest
     ) -> IssueCreationResponse:
         """
-        create_issue создать задачу
+        create_issue https://cloud.yandex.ru/docs/tracker/concepts/issues/create-issue
 
-        :param client: экземпляр клиента
+        :param client: client instance
         :type client: BaseClient
-        :param data: тело запроса
+        :param data: request body
         :type data: IssueModel
-        :raises ClientError, ClientConnectionError
-        :return: ответ в случае успешной операции
+        :raises ClientError
+        :raises ClientConnectionError
+        :return: response data
         :rtype: IssueCreationResponse
         """
         url = f"{self._endpoint}/"
         response = await client.post(url=url, data=data)
-        return IssueCreationResponse.parse_obj(await response.json())
+        response_data = await response.json()
+        response.close()
+        return IssueCreationResponse.parse_obj(response_data)
 
-    async def move_issue(
+    async def move(
         self,
         client: BaseClient,
         issue_id: str,
@@ -81,58 +90,91 @@ class Query:
         expand_workflow: bool = False,
         expand_transitions: bool = False,
     ) -> IssueMoveResponse:
+        """
+        move_issue https://cloud.yandex.ru/docs/tracker/concepts/issues/move-issue
+
+        :param client: client instance
+        :type client: BaseClient
+        :param issue_id: e.g. QUEUE-1
+        :type issue_id: str
+        :param dest_queue: e.g. NEW
+        :type dest_queue: str
+        :param data: see documentation, defaults to None
+        :type data: IssueMoveRequest | None, optional
+        :param notify: notify that issue was moved, defaults to True
+        :type notify: bool, optional
+        :param notify_author: notify author that issue was moved, defaults to False
+        :type notify_author: bool, optional
+        :param move_all_fields: move all fields, defaults to False
+        :type move_all_fields: bool, optional
+        :param initial_status: reset initial status to queue workflow default state, defaults to False
+        :type initial_status: bool, optional
+        :param expand_attachments: expand response data with attachments, defaults to False
+        :type expand_attachments: bool, optional
+        :param expand_comments: expand response data with comments, defaults to False
+        :type expand_comments: bool, optional
+        :param expand_workflow: expand response data with workflow, defaults to False
+        :type expand_workflow: bool, optional
+        :param expand_transitions: expand response data with transitions, defaults to False
+        :type expand_transitions: bool, optional
+        :raises ClientError
+        :raises ClientConnectionError
+        :return: response data
+        :rtype: IssueMoveResponse
+        """
         additional_params: Dict[str, Any] = {
             "queue": dest_queue,
-            "notify": int(notify),
-            "notify_author": int(notify_author),
-            "move_all_field": int(move_all_fields),
-            "initial_status": int(initial_status),
+            "notify": "true" if notify else "false",
+            "notify_author": "true" if notify_author else "false",
+            "move_all_field": "true" if move_all_fields else "false",
+            "initial_status": "true" if initial_status else "false",
         }
         if expand:
-            expand_arr = []
             if expand_attachments:
-                expand_arr.append("attachmments")
+                additional_params["expand"] = "attachments"
             if expand_comments:
-                expand_arr.append("comments")
+                additional_params["expand"] = "comments"
             if expand_workflow:
-                expand_arr.append("workflow")
+                additional_params["expand"] = "workflow"
             if expand_transitions:
-                expand_arr.append("transitions")
-            if expand_arr:
-                additional_params["expand"] = ",".join(expand_arr)
+                additional_params["expand"] = "transitions"
         url = f"{self._endpoint}/{issue_id}/_move"
         response = await client.post(url=url, data=data, params=additional_params)
-        return IssueMoveResponse.parse_obj(await response.json())
+        response_data = await response.json()
+        response.close()
+        return IssueMoveResponse.parse_obj(response_data)
 
-    votes: int
-
-    async def count_issues(self, client: BaseClient, data: IssueCountRequest) -> int:
+    async def count(self, client: BaseClient, data: IssueCountRequest) -> int:
         """
-        count_issues узнать количество задач
+        count_issues https://cloud.yandex.ru/docs/tracker/concepts/issues/count-issues
 
-        :param client: экземпляр клиента
+        :param client: client instance
         :type client: BaseClient
-        :param data: тело запроса
+        :param data: request body
         :type data: IssueCountRequest
-        :raises ClientError, ClientConnectionError
-        :return: ответ в случае успешного выполнения
+        :raises ClientError
+        :raises ClientConnectionError
+        :return: response data
         :rtype: int
         """
         url = f"{self._endpoint}/_count"
         response = await client.post(url=url, data=data)
-        return int(await response.text())
+        response_data = int(await response.text())
+        response.close()
+        return response_data
 
-    async def search_issues(self, client: BaseClient, data: IssueSearchRequest)->AsyncGenerator:
+    async def search(
+        self, client: BaseClient, data: IssueSearchRequest
+    ) -> AsyncGenerator:
         """
-        search_issues поиск задач
+        search_issues get_issues_parametershttps://cloud.yandex.ru/docs/tracker/concepts/issues/search-issues
 
-        :param client: экземпляр клиента
+        :param client: client instance
         :type client: BaseClient
-        :param data: тело запроса с фильтрами
+        :param data: request body
         :type data: IssueSearchRequest
-        :return: 
         :rtype: AsyncGenerator
-        :yield: 
+        :yield: List[IssueSearchResponse]
         :rtype: Iterator[AsyncGenerator]
         """
         url = f"{self._endpoint}/_search"
@@ -140,16 +182,205 @@ class Query:
         response.close()
         pagination = await client.handle_response(response)
         for i in range(1, pagination.total_pages + 1):
-            pagination_params = self._params.copy()
-            pagination_params.page = i
+            pagination_params = RequestParams(page=i).dict(by_alias=True)
             paginated_response = await client.post(
-                url=url, data=data, params=pagination_params.dict(by_alias=True)
+                url=url, data=data, params=pagination_params
             )
             paginated_response_model = [
                 IssueSearchResponse.parse_obj(item)
                 for item in await paginated_response.json()
             ]
             yield paginated_response_model
+            paginated_response.close()
 
+    async def get_priorities(
+        self, client: BaseClient, localized: bool = False
+    ) -> AsyncGenerator[List[IssuePrioritiesResponse], None]:
+        """
+        get_priorities https://cloud.yandex.ru/docs/tracker/concepts/issues/get-priorities
+
+        :param: localize response data
+        :return: response data
+        :yield: List[IssuePrioritiesResponse]
+        :rtype: Iterator[AsyncGenerator[List[IssuePrioritiesResponse], None]]
+
+        """
+        url = f"priorities"
+        additional_params = {"localized": "true" if localized else "false"}
+        response = await client.get(url=url, params=additional_params)
+        pagination = await client.handle_response(response)
+        response.close()
+        for i in range(1, pagination.total_pages + 1):
+            pagination_params = self._params.copy()
+            pagination_params.page = i
+            paginated_response = await client.get(
+                url=url, params=pagination_params.dict(by_alias=True)
+            )
+            paginated_response_model = [
+                IssuePrioritiesResponse.parse_obj(item)
+                for item in await paginated_response.json()
+            ]
+            yield paginated_response_model
+            paginated_response.close()
+
+    async def get_transitions(
+        self, client: BaseClient, issue_id: str
+    ) -> AsyncGenerator[List[IssueTransitionResponse], None]:
+        """
+        get_transition https://cloud.yandex.ru/docs/tracker/concepts/issues/get-transitions
+
+        :param client: client instance
+        :type client: BaseClient
+        :param issue_id: e.g. QUEUE-1
+        :type issue_id: str
+        :return: response data
+        :yield: List[IssueTransitionResponse]
+        :rtype: Iterator[AsyncGenerator[List[IssueTransitionResponse], None]]
+        """
+        url = f"{self._endpoint}/{issue_id}/transitions"
+        response = await client.get(url=url)
+        pagination = await client.handle_response(response)
+        response.close()
+        for i in range(1, pagination.total_pages + 1):
+            pagination_params = self._params.copy()
+            pagination_params.page = i
+            paginated_response = await client.get(
+                url=url, params=pagination_params.dict(by_alias=True)
+            )
+            paginated_response_model = [
+                IssueTransitionResponse.parse_obj(item)
+                for item in await paginated_response.json()
+            ]
+            yield paginated_response_model
+            paginated_response.close()
+
+    async def set_transition(
+        self,
+        client: BaseClient,
+        issue_id: str,
+        transition_id: str,
+        comments: str | None = None,
+    ) -> IssueTransitionOperationResponse:
+        """
+        transit_issue https://cloud.yandex.ru/docs/tracker/concepts/issues/new-transition
+
+        :param client: client instance
+        :type client: BaseClient
+        :param issue_id: e.g. QUEUE-1
+        :type issue_id: str
+        :param transition_id: e.g. 1 or 'active'. See queue workflow configuration
+        :type transition_id: str
+        :param comments: comments to transition operation, defaults to None
+        :type comments: str | None, optional
+        :return: response data
+        :rtype: IssueTransitionOperationResponse
+        """
+        url = f"{self._endpoint}/{issue_id}/transitions/{transition_id}"
+        additional_params = {}
+        if comments:
+            additional_params["comments"] = comments
+        response = await client.post(
+            url=url, data=None, params=additional_params if additional_params else None
+        )
+        response_data = await response.json()
+        response.close()
+        return IssueTransitionOperationResponse.parse_obj(response_data)
+
+    async def get_changelog(
+        self,
+        client: BaseClient,
+        issue_id: str,
+        changed_id: str | None = None,
+        changed_field: str | None = None,
+        changed_type: ChangeType | None = None,
+    ) -> List[IssueChangelogResponse]:
+        """
+        get_changelog https://cloud.yandex.ru/docs/tracker/concepts/issues/get-changelog
+
+        :param client: client instance
+        :type client: BaseClient
+        :param issue_id: e.g. QUEUE-1
+        :type issue_id: str
+        :param changed_id: id of change, defaults to None
+        :type changed_id: str | None, optional
+        :param changed_field: field that was changed, defaults to None
+        :type changed_field: str | None, optional
+        :param changed_type: type of change, defaults to None
+        :type changed_type: ChangeType | None, optional
+        :return: _description_
+        :rtype: List[IssueChangelogResponse]
+        """
+        additional_params = {}
+        if changed_id:
+            additional_params["id"] = changed_id
+        if changed_field:
+            additional_params["field"] = changed_field
+        if changed_type:
+            additional_params["type"] = changed_type.value
+        url = f"{self._endpoint}/{issue_id}/changelog"
+        response = await client.get(
+            url=url, params=additional_params if additional_params else None
+        )
+        response_data = await response.json()
+        response.close()
+        return [IssueChangelogResponse.parse_obj(item) for item in response_data]
+
+    async def link(
+        self, client: BaseClient, issue_id: str, data: IssueRelationshipCreateRequest
+    ) -> IssueRelationshipCreateResponse:
+        """
+        link https://cloud.yandex.ru/docs/tracker/concepts/issues/link-issue
+
+        :param client: client instance
+        :type client: BaseClient
+        :param issue_id: e.g. QUEUE-1
+        :type issue_id: str
+        :param data: request body
+        :type data: IssueRelationshipOperationRequest
+        :return: response data
+        :rtype: IssueRelationshipCreateResponse
+        """
+        url = f"{self._endpoint}/{issue_id}/links"
+        response = await client.post(url=url, data=data)
+        response_data = await response.json()
+        response.close()
+        return IssueRelationshipCreateResponse.parse_obj(response_data)
+
+    async def get_links(
+        self, client: BaseClient, issue_id: str
+    ) -> List[IssueRelationshipResponse]:
+        """
+        get_links https://cloud.yandex.ru/docs/tracker/concepts/issues/get-links
+
+        :param client: client instance
+        :type client: BaseClient
+        :param issue_id: e.g. QUEUE-1
+        :type issue_id: str
+        :return: response data
+        :rtype: List[IssueRelationshipResponse]
+        """
+        url = f"{self._endpoint}/{issue_id}/links"
+        response = await client.get(url=url)
+        response_data = await response.json()
+        response.close()
+        return [IssueRelationshipResponse.parse_obj(item) for item in response_data]
+
+    async def remove_link(
+        self, client: BaseClient, issue_id: str, related_issue_id: str
+    ):
+        """
+        remove_link https://cloud.yandex.ru/docs/tracker/concepts/issues/delete-link-issue
+
+        :param client: client instance
+        :type client: BaseClient
+        :param issue_id: root issue id, e.q. QUEUE-1
+        :type issue_id: str
+        :param related_issue_id: e.g. QUEUE-1
+        :type related_issue_id: str
+        """
+
+        url = f"{self._endpoint}/{issue_id}/links/{related_issue_id}"
+        response = await client.delete(url=url)
+        response.close()
 
 query = Query()
