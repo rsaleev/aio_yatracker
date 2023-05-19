@@ -171,3 +171,5 @@ async def queues(
         response_data = await response.json()
         response.close()
         return ProjectEditResponse.parse_obj(response_data)
+
+query = Query()
