@@ -43,4 +43,16 @@ End with an example of getting some data out of the system or using it for a lit
 
 ## Usage <a name = "usage"></a>
 
-Add notes about how to use the system.
+```python
+import asyncio
+from aio_tracker import issues
+from aio_tracker.base import TrackerClient
+
+async def main():
+    async with BaseClient(os.environ['YANDEX_TOKEN', 'TRACKER_ORG_ID']) as client:
+        issues = await issues.search(client, 'TESTCLIENT') # returns AsyncGenerator
+        async for issue in issues: # Pydantic object
+            ...
+asyncio.run(main())
+
+```
