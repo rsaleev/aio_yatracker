@@ -29,7 +29,7 @@ class Query:
         response.close()
         return ChecklistCreateResponse.parse_obj(response_data)
 
-    async def get_checklist(
+    async def params(
         self, client: BaseClient, issue_id: str
     ) -> List[ChecklistParamsResponse]:
         """
@@ -48,7 +48,7 @@ class Query:
         response.close()
         return [ChecklistParamsResponse.parse_obj(item) for item in response_data]
 
-    async def edit_checklist(
+    async def edit(
         self,
         client: BaseClient,
         issue_id: str,
@@ -75,7 +75,7 @@ class Query:
         response.close()
         return ChecklistEditResponse.parse_obj(response_data)
 
-    async def remove_checklist(self, client: BaseClient, issue_id: str):
+    async def remove(self, client: BaseClient, issue_id: str):
         """
         remove_checklist https://cloud.yandex.ru/docs/tracker/concepts/issues/delete-checklist
 
@@ -88,7 +88,7 @@ class Query:
         response = await client.delete(url=url)
         response.close()
 
-    async def remove_checklist_item(
+    async def remove_item(
         self, client: BaseClient, issue_id: str, checklist_item_id: str
     ):
         """

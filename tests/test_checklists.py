@@ -12,15 +12,15 @@ async def test_create_checklist(get_client: BaseClient, get_primary_issue_id: st
 
 
 async def test_get_checklist(get_client: BaseClient, get_primary_issue_id: str):
-    r = await checklists.query.get_checklist(get_client, get_primary_issue_id)
+    r = await checklists.query.params(get_client, get_primary_issue_id)
     assert all([isinstance(item, checklists.ChecklistParamsResponse) for item in r])
 
 
 async def test_edit_checklist(get_client: BaseClient, get_primary_issue_id: str):
-    current = await checklists.query.get_checklist(get_client, get_primary_issue_id)
+    current = await checklists.query.params(get_client, get_primary_issue_id)
     checkbox = current[0]
     assert isinstance(checkbox, checklists.ChecklistParamsResponse)
-    r = await checklists.query.edit_checklist(
+    r = await checklists.query.edit(
         get_client,
         get_primary_issue_id,
         checkbox.id,
@@ -36,16 +36,17 @@ async def test_delete_checklist_item(get_client: BaseClient, get_primary_issue_i
         data=checklists.ChecklistCreateRequest(text="TestCheckItemDelete1"),
     )
     for item in created.checklist_items:
-        await checklists.query.remove_checklist_item(
+        await checklists.query.remove_item(
             get_client,
             get_primary_issue_id,
             checklist_item_id=item.id,
         )
 
-async def test_delete_checklist(get_client: BaseClient, get_primary_issue_id:str):
+
+async def test_delete_checklist(get_client: BaseClient, get_primary_issue_id: str):
     created = await checklists.query.create(
         get_client,
         get_primary_issue_id,
         data=checklists.ChecklistCreateRequest(text="TestCheckItemDelete1"),
     )
-    await checklists.query.remove_checklist(get_client, get_primary_issue_id)
+    await checklists.query.remove(get_client, get_primary_issue_id)

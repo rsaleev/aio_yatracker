@@ -63,7 +63,7 @@ async def test_search_issues(get_client, get_primary_queue_id):
 
 
 async def test_priorities(get_client):
-    async for priorities_list in issues.query.get_priorities(get_client):
+    async for priorities_list in issues.query.priorities(get_client):
         assert all(
             isinstance(priority, issues.IssuePrioritiesResponse)
             for priority in priorities_list
@@ -71,7 +71,7 @@ async def test_priorities(get_client):
 
 
 async def test_transitions(get_client, get_primary_issue_id):
-    async for transitions_list in issues.query.get_transitions(
+    async for transitions_list in issues.query.transitions(
         get_client, get_primary_issue_id
     ):
         assert all(
@@ -81,7 +81,7 @@ async def test_transitions(get_client, get_primary_issue_id):
 
 
 async def test_changelog(get_client, get_secondary_issue_id):
-    r = await issues.query.get_changelog(get_client, get_secondary_issue_id)
+    r = await issues.query.changelog(get_client, get_secondary_issue_id)
     assert all([isinstance(changes, issues.IssueChangelogResponse) for changes in r])
 
 
@@ -94,11 +94,11 @@ async def test_link_create(get_client, get_primary_issue_id, get_secondary_issue
 
 
 async def test_links(get_client, get_primary_issue_id):
-    r = await issues.query.get_links(get_client, get_primary_issue_id)
+    r = await issues.query.links(get_client, get_primary_issue_id)
     assert all([isinstance(item, issues.IssueRelationshipResponse) for item in r])
 
 async def test_link_remove(get_client, get_primary_issue_id, get_secondary_issue_id):
-    current_links = await issues.query.get_links(get_client, get_primary_issue_id)
+    current_links = await issues.query.links(get_client, get_primary_issue_id)
     link_id = next(link.id for link in current_links if link.object.key == get_secondary_issue_id)
     await issues.query.remove_link(
         get_client, get_primary_issue_id, link_id

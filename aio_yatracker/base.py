@@ -132,6 +132,22 @@ class BaseClient:
             f"/{self._version}/{url}",params=params
         )
 
+    async def put(
+        self,
+        url:str, 
+        params: typing.Dict[str, typing.Any] | None = None,
+        data:TrackerModel| None = None 
+    )->ClientResponse:
+        default_params = self._params.dict(by_alias=True)
+        if params:
+            default_params.update(params)
+        return await self._session.put(
+            f"/{self._version}/{url}",
+            params=default_params
+        )
+            
+        
+
     async def handle_response(
         self,
         response: ClientResponse,

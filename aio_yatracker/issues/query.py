@@ -193,7 +193,7 @@ class Query:
             yield paginated_response_model
             paginated_response.close()
 
-    async def get_priorities(
+    async def priorities(
         self, client: BaseClient, localized: bool = False
     ) -> AsyncGenerator[List[IssuePrioritiesResponse], None]:
         """
@@ -223,7 +223,7 @@ class Query:
             yield paginated_response_model
             paginated_response.close()
 
-    async def get_transitions(
+    async def transitions(
         self, client: BaseClient, issue_id: str
     ) -> AsyncGenerator[List[IssueTransitionResponse], None]:
         """
@@ -254,7 +254,7 @@ class Query:
             yield paginated_response_model
             paginated_response.close()
 
-    async def set_transition(
+    async def transition(
         self,
         client: BaseClient,
         issue_id: str,
@@ -286,7 +286,7 @@ class Query:
         response.close()
         return IssueTransitionOperationResponse.parse_obj(response_data)
 
-    async def get_changelog(
+    async def changelog(
         self,
         client: BaseClient,
         issue_id: str,
@@ -346,7 +346,7 @@ class Query:
         response.close()
         return IssueRelationshipCreateResponse.parse_obj(response_data)
 
-    async def get_links(
+    async def links(
         self, client: BaseClient, issue_id: str
     ) -> List[IssueRelationshipResponse]:
         """

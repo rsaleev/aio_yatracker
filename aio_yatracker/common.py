@@ -164,8 +164,14 @@ class Project(TrackerModel):
     key: str
     name: str
     description: str
-    lead:Attributes4
-    status:str
-    start_date:date
-    end_date:date
-    
+    lead: Attributes4
+    status: str
+    start_date: date
+    end_date: date
+
+
+class ProjectStatus(StrEnum):
+    DRAFT = "DRAFT"
+    IN_PROGRESS = "IN PROGRESS"
+    LAUNCHED = "LAUNCHED"
+    POSTPONED = "POSTPONED"
