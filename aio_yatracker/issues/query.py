@@ -10,7 +10,7 @@ class Query:
         self._endpoint = "issues"
         self._params = RequestParams()
 
-    async def get_parameters(
+    async def params(
         self, client: BaseClient, issue_id: str
     ) -> IssueParametersResponse:
         """
@@ -44,7 +44,7 @@ class Query:
         :type data: IssueModificationRequest
         :raises ClientError
         :raises ClientConnectionError
-        :return: response data
+        :return: Add notes about how to use the system.response data
         :rtype: IssueModificationResponse
         """
         url = f"{self._endpoint}/{issue_id}"

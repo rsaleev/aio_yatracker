@@ -3,7 +3,7 @@ from aio_yatracker.common import Relationship
 
 
 async def test_get_issue_parameters(get_client, get_primary_issue_id):
-    r = await issues.query.get_parameters(get_client, get_primary_issue_id)
+    r = await issues.query.params(get_client, get_primary_issue_id)
     assert isinstance(r, issues.models.IssueParametersResponse)
 
 
