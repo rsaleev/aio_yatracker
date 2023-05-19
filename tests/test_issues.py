@@ -18,8 +18,8 @@ async def test_modify_issue(get_client, get_primary_issue_id):
     assert r.summary == "Test"
 
 
-async def test_create_issue(get_client):
-    body = issues.IssueCreationRequest(summary="TestReason", queue="SSTGARBAGE")
+async def test_create_issue(get_client, get_primary_queue_id):
+    body = issues.IssueCreationRequest(summary="TestReason", queue=get_primary_queue_id)
     r = await issues.query.create(get_client, body)
     assert isinstance(r, issues.models.IssueCreationResponse)
     assert r.summary == "TestReason"
@@ -40,12 +40,12 @@ async def test_move_issue(get_client, get_primary_queue_id, get_secondary_queue_
     )
     assert moved
     assert moved.queue.key == get_secondary_queue_id
-    assert moved.previous_queue.key == "TESTCLIENT"
+    assert moved.previous_queue.key == get_primary_queue_id
 
 
-async def test_count_issues(get_client):
+async def test_count_issues(get_client, get_primary_queue_id):
     r = await issues.query.count(
-        get_client, issues.IssueCountRequest(filter={"queue": "TESTCLIENT"})
+        get_client, issues.IssueCountRequest(filter={"queue": get_primary_queue_id})
     )
     assert r
     assert r > 0

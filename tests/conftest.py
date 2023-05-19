@@ -15,19 +15,19 @@ async def get_client():
 
 @pytest.fixture(autouse=True)
 def get_primary_queue_id():
-    return "TESTCLIENT"
+    return "QUEUEONE"
 
 
 @pytest.fixture(autouse=True)
 def get_secondary_queue_id():
-    return "TESTCLIENTRESER"
+    return "QUEUETWO"
 
 
 @pytest.fixture(autouse=True)
 def get_primary_issue_id():
-    return "TESTCLIENT-1"
+    return "QUEUEONE-1"
 
 
 @pytest.fixture(autouse=True)
 def get_secondary_issue_id():
-    return "TESTCLIENTRESER-1"
+    return "QUEUETWO-1"
