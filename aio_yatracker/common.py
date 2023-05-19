@@ -163,11 +163,11 @@ class Project(TrackerModel):
     version: int
     key: str
     name: str
-    description: str
+    description: typing.Optional[str]
     lead: Attributes4
     status: str
-    start_date: date
-    end_date: date
+    start_date: typing.Optional[date]
+    end_date: typing.Optional[date]
 
 
 class ProjectStatus(StrEnum):
