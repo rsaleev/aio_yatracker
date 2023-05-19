@@ -3,8 +3,9 @@ import os
 from aiohttp import ClientSession
 
 from aio_yatracker.base import BaseClient
+import pytest
 
-
+@pytest.mark.asyncio
 async def test_client_ceation():
     async with BaseClient(
         os.environ["YANDEX_TOKEN"], os.environ["TRACKER_ORG_ID"]
