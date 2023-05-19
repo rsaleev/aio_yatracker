@@ -161,4 +161,3 @@ cython_debug/
 
 *.env
 .vscode/*
-pytest.ini
