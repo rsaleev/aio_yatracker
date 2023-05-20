@@ -170,7 +170,21 @@ class Query:
         project_id: str,
         version: int,
         data: ProjectEditRequest,
-    ):
+    )->ProjectEditResponse:  
+        """
+        edit https://cloud.yandex.ru/docs/tracker/concepts/projects/update-project
+
+        :param client: client instance
+        :type client: BaseClient
+        :param project_id: e.g. 1
+        :type project_id: str
+        :param version: _e.g. 1
+        :type version: int
+        :param data: _request body_
+        :type data: ProjectEditRequest
+        :return: _description_
+        :rtype: ProjectEditResponse
+        """
         url = f"{self._endpoint}/{project_id}"
         additional_params = {"version": version}
         response = await client.put(url=url, data=data, params=additional_params)
@@ -178,5 +192,17 @@ class Query:
         response.close()
         return ProjectEditResponse.parse_obj(response_data)
 
+    async def delete(self, client:BaseClient, project_id:str)->None:
+        """
+        delete https://cloud.yandex.ru/docs/tracker/concepts/projects/delete-project
+
+        :param client: client instance
+        :type client: BaseClient
+        :param project_id: e.g. 1
+        :type project_id: str
+        """
+        url = f"{self._endpoint}/{project_id}"
+        response = await client.delete(url=url)
+        response.close() 
 
 query = Query()
