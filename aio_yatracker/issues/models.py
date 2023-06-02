@@ -1,28 +1,26 @@
 import typing
 from datetime import datetime
 
-from pydantic import Field, root_validator, validator
+from pydantic import Field, root_validator
 
 from ..base import TrackerModel
 from ..common import *
-from ..utils import convert_iso_8601_to_datetime
 
 
-
-
-
-class IssueParametersResponse(TrackerModel):
-    __root__: typing.Union[typing.List[IssueModel], IssueModel]
+class IssueParametersResponse(IssueModel):
+    pass
 
 
 class IssueModificationRequest(TrackerModel):
     summary: typing.Optional[str] = None
-    parent: typing.Optional[Attributes4] = None
+    parent: typing.Optional[Attributes8] = None
     description: typing.Optional[str] = None
-    sprint: typing.Optional[Attributes4] = None
-    type: typing.Optional[Attributes6] = None
-    priority: typing.Optional[Attributes6] = None
-    followers: typing.Optional[Attributes6] = None
+    sprint: typing.Optional[
+        typing.Union[Attributes8, typing.List[Attributes1], str]
+    ] = None
+    type: typing.Optional[Attributes2] = None
+    priority: typing.Optional[Attributes2] = None
+    followers: typing.Optional[typing.Dict[str, typing.List[str]]] = None
 
     @root_validator(pre=True)
     def validate_non_empty(cls, values):
@@ -38,14 +36,14 @@ class IssueModificationResponse(IssueModel):
 class IssueCreationRequest(TrackerModel):
     summary: str
     queue: Attributes6 | str
-    parent: typing.Optional[Attributes5] = None
+    parent: typing.Optional[typing.Union[Attributes5, str]] = None
     description: typing.Optional[str] = None
     sprint: typing.Optional[typing.Union[typing.List[str], Attributes4]] = None
     type: typing.Optional[typing.Union[Attributes6, int, str]] = None
     priority: typing.Optional[typing.Union[Attributes6, int, str]] = None
     followers: typing.Optional[typing.Union[str, Attributes4]] = None
-    assignee: typing.Optional[typing.List[str]] = None
-    attachment_ids: typing.Optional[typing.List[str]] = None
+    assignee: typing.Optional[typing.Union[str, typing.List[str]]] = None
+    attachment_ids: typing.Optional[typing.List[int]] = None
 
 
 class IssueCreationResponse(IssueModel):
@@ -68,34 +66,10 @@ class IssueMoveRequest(IssueModel):
 
 
 class IssueMoveResponse(IssueModel):
-    self: str
-    id: str
-    key: str
-    version: int
-    aliases: typing.Optional[typing.List[str]]
     previous_queue: Attributes6
-    description: typing.Optional[str]
-    type: Attributes6
-    created_at: datetime
-    updated_at: typing.Optional[datetime]
-    last_comment_updated_at: typing.Optional[datetime]
-    summary: str
-    updated_by: Attributes4
-    priority: Attributes6
-    followers: typing.Optional[typing.List[Attributes4]] = []
-    created_by: Attributes4
-    assignee: typing.Optional[typing.Optional[Attributes4]]
-    queue: Attributes6
-    status: Attributes6
     previous_status: typing.Optional[Attributes6]
-    favorite: bool
 
-    _validate_created_at = validator("created_at", allow_reuse=True, pre=True)(
-        convert_iso_8601_to_datetime
-    )
-    _validate_updated_at = validator("updated_at", allow_reuse=True, pre=True)(
-        convert_iso_8601_to_datetime
-    )
+ 
 
 
 class IssueCountRequest(TrackerModel):
@@ -129,6 +103,7 @@ class IssueTransitionResponse(Attributes4):
 class IssueTransitionOperationResponse(Attributes7):
     to: Attributes6
     screen: Attributes7
+
 
 class IssueChangelogField(TrackerModel):
     field: Attributes4 | None
@@ -176,12 +151,12 @@ class IssueRelationshipCreateRequest(TrackerModel):
     relationship: typing.Union[
         typing.Literal[Relationship.DEPENDS_ON],
         typing.Literal[Relationship.DUPLICATES],
-        typing.Literal[Relationship.HAS_EPIC],
-        typing.Literal[Relationship.IS_DEPENDENT_BY],
-        typing.Literal[Relationship.IS_DUPLICATED_BY],
-        typing.Literal[Relationship.IS_EPIC_OF],
-        typing.Literal[Relationship.IS_PARENT_TASK_FOR],
-        typing.Literal[Relationship.IS_SUBTASK_FOR],
+        typing.Literal[Relationship.EPIC],
+        typing.Literal[Relationship.DEPENDENT],
+        typing.Literal[Relationship.DUPLICATED],
+        typing.Literal[Relationship.EPIC],
+        typing.Literal[Relationship.PARENT],
+        typing.Literal[Relationship.SUBTASK],
         typing.Literal[Relationship.RELATES],
     ]
     issue: str
@@ -192,12 +167,12 @@ class RelationshipType(TrackerModel):
     id: typing.Union[
         typing.Literal[Relationship.DEPENDS_ON],
         typing.Literal[Relationship.DUPLICATES],
-        typing.Literal[Relationship.HAS_EPIC],
-        typing.Literal[Relationship.IS_DEPENDENT_BY],
-        typing.Literal[Relationship.IS_DUPLICATED_BY],
-        typing.Literal[Relationship.IS_EPIC_OF],
-        typing.Literal[Relationship.IS_PARENT_TASK_FOR],
-        typing.Literal[Relationship.IS_SUBTASK_FOR],
+        typing.Literal[Relationship.EPIC],
+        typing.Literal[Relationship.DEPENDENT],
+        typing.Literal[Relationship.DUPLICATED],
+        typing.Literal[Relationship.EPIC],
+        typing.Literal[Relationship.PARENT],
+        typing.Literal[Relationship.SUBTASK],
         typing.Literal[Relationship.RELATES],
     ]
     inward: str
