@@ -1,7 +1,7 @@
 import typing
 from datetime import datetime
 
-from ..base import BaseClient, TrackerModel
+from ..base import TrackerModel
 from ..common import *
 
 
@@ -70,10 +70,9 @@ class ChecklistEditResponse(Checklist):
 class ChecklistItemRemoveResponse(Checklist):
     pass
 
+
 class ChecklistRemoveResponse(Checklist):
     pass
-
-
 
 
 __all__ = [
@@ -83,5 +82,6 @@ __all__ = [
     "ChecklistEditRequest",
     "ChecklistEditResponse",
     "ChecklistItemRemoveResponse",
-    "ChecklistRemoveResponse"
+    "ChecklistRemoveResponse",
+    "ChecklistDeadline",
 ]
