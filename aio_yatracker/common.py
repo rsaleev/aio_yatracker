@@ -34,14 +34,13 @@ class ChangeType(StrEnum):
 
 class Relationship(StrEnum):
     RELATES = "relates"
-    IS_DEPENDENT_BY = "is dependent by"
-    DEPENDS_ON = "depends on"
-    IS_SUBTASK_FOR = "is subtask for"
-    IS_PARENT_TASK_FOR = "is parent task for"
+    DEPENDENT = "dependent"
+    DEPENDS_ON = "depends"
+    SUBTASK = "subtask"
+    PARENT = "parent"
     DUPLICATES = "duplicates"
-    IS_DUPLICATED_BY = "is duplicated by"
-    IS_EPIC_OF = "is epic of"
-    HAS_EPIC = "has epic"
+    DUPLICATED = "duplicated"
+    EPIC = "epic"
 
 
 class Attributes1(TrackerModel):
@@ -82,6 +81,10 @@ class Attributes7(TrackerModel):
     id: str
 
 
+class Attributes8(TrackerModel):
+    key: str
+
+
 class IssueModel(TrackerModel):
     self: str
     id: str
@@ -98,7 +101,7 @@ class IssueModel(TrackerModel):
     created_at: datetime
     followers: typing.Optional[typing.List[Attributes4]] = []
     created_by: Attributes4
-    votes: int
+    votes: typing.Optional[int]
     assignee: typing.Optional[typing.Optional[Attributes4]]
     queue: Attributes6
     updated_at: typing.Optional[datetime]
@@ -120,7 +123,6 @@ class ChecklistItem(TrackerModel):
     text_html: str
     checked: bool
     checklist_item_type: str
-
 
 class Checklist(TrackerModel):
     self: str
@@ -168,6 +170,7 @@ class Project(TrackerModel):
     status: str
     start_date: typing.Optional[date]
     end_date: typing.Optional[date]
+    queues: typing.Optional[typing.List[Attributes4]] = None
 
 
 class ProjectStatus(StrEnum):
@@ -175,3 +178,14 @@ class ProjectStatus(StrEnum):
     IN_PROGRESS = "IN PROGRESS"
     LAUNCHED = "LAUNCHED"
     POSTPONED = "POSTPONED"
+
+
+class CommentType(StrEnum):
+    STANDART = "STANDART"
+    INCOMING = "INCOMING"
+    OUTCOMING = "OUTCOMING"
+
+
+class Transport(StrEnum):
+    INTERNAL = "internal"
+    EMAIL = "email"
