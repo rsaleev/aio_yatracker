@@ -1,6 +1,7 @@
 import json
 import re
 from datetime import datetime
+
 from aio_yatracker.base import ResponseParams, TrackerModel
 
 
@@ -11,7 +12,7 @@ class DefaultModel(TrackerModel):
 
 
 def test_base_model():
-    test_data = {"id": 1, "val": "Что-то надо написать", "dt": datetime.now()}
+    test_data = {"id": 1, "val": "some data", "dt": datetime.now()}
     test_output_json = DefaultModel.parse_obj(test_data).json(by_alias=True)
     test_output_dict = json.loads(test_output_json)
     assert test_output_dict["id"] == 1
