@@ -73,7 +73,7 @@ async def edit(
     return ChecklistEditResponse.parse_obj(response_data)
 
 
-async def remove(client: BaseClient, issue_id: str):
+async def remove(client: BaseClient, issue_id: str) -> ChecklistRemoveResponse:
     """
     remove_checklist https://cloud.yandex.ru/docs/tracker/concepts/issues/delete-checklist
 
@@ -81,15 +81,21 @@ async def remove(client: BaseClient, issue_id: str):
     :type client: BaseClient
     :param issue_id: e.g. QUEUE-1
     :type issue_id: str
+    :return: response data
+    :rtype: ChecklistRemoveResponse
     """
     url = f"{ENDPOINT}/{issue_id}/checklistItems"
     response = await client.delete(url=url)
+    response_data = await response.json()
     response.close()
+    return ChecklistRemoveResponse.parse_obj(response_data)
 
 
-async def remove_item(client: BaseClient, issue_id: str, checklist_item_id: str):
+async def remove_item(
+    client: BaseClient, issue_id: str, checklist_item_id: str
+) -> ChecklistItemRemoveResponse:
     """
-    remove_checklist_item https://cloud.yandex.ru/docs/tracker/concepts/issues/delete-checklist-item
+    remove checklist_item https://cloud.yandex.ru/docs/tracker/concepts/issues/delete-checklist-item
 
     :param client: client instance
     :type client: BaseClient
@@ -97,7 +103,11 @@ async def remove_item(client: BaseClient, issue_id: str, checklist_item_id: str)
     :type issue_id: str
     :param checklist_item_id: 5f981c00b982f0755dbdc13d
     :type checklist_item_id: str
+    :return: response data
+    :rtype: ChecklistItemRemoveResponse
     """
     url = f"{ENDPOINT}/{issue_id}/checklistItems/{checklist_item_id}"
     response = await client.delete(url=url)
+    response_data = await response.json()
     response.close()
+    return ChecklistItemRemoveResponse.parse_obj(response_data)
