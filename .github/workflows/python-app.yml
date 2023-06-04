@@ -59,4 +59,4 @@ jobs:
         YANDEX_TOKEN: '${{ secrets.YANDEX_TOKEN }}'
         TRACKER_ORG_ID: '${{ secrets.TRACKER_ORG_ID }}'
       run: |
-        pytest
+        poetry run pytest
