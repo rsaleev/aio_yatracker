@@ -7,7 +7,7 @@ from aio_yatracker.common import *
 
 
 @pytest.mark.asyncio
-async def test_get_issue_parameters(mocker, get_client):
+async def test_get_issue(mocker, get_client):
     resp = {
         "self": "https://api.tracker.yandex.net/v2/issues/TREK-9844",
         "id": "593cd211ef7e8a332414f2a7",
@@ -93,6 +93,15 @@ async def test_get_issue_parameters(mocker, get_client):
     )
     r = await issues.get(get_client, "TREK-9844")
     assert isinstance(r, issues.models.IssueParametersResponse)
+    assert isinstance(r.last_comment_updated_at, datetime)
+    assert isinstance(r.created_at, datetime)
+    assert isinstance(r.updated_at, datetime)
+    assert r.previous_status
+    assert r.status
+    assert r.queue.key == "TREK"
+    assert r.key == "TREK-9844"
+    assert r.priority
+    assert isinstance(r.priority, Attributes6)
 
 
 @pytest.mark.asyncio
@@ -105,9 +114,9 @@ async def test_modify_issue(mocker, get_client):
         "lastCommentUpdatedAt": "2017-07-18T13:33:44.291+0000",
         "summary": "subtask",
         "parent": {
-            "self": "https://api.tracker.yandex.net/v2/issues/JUNE-2",
+            "self": "https://api.tracker.yandex.net/v2/issues/TEST-2",
             "id": "593cd0acef7e8a332414f28e",
-            "key": "JUNE-2",
+            "key": "TEST-2",
             "display": "Task",
         },
         "aliases": ["JUNE-3"],
@@ -122,7 +131,12 @@ async def test_modify_issue(mocker, get_client):
                 "self": "https://api.tracker.yandex.net/v2/sprints/5317",
                 "id": "5317",
                 "display": "sprint1",
-            }
+            },
+            {
+                "self": "https://api.tracker.yandex.net/v2/sprints/5318",
+                "id": "5318",
+                "display": "sprint2",
+            },
         ],
         "type": {
             "self": "https://api.tracker.yandex.net/v2/issuetypes/2",
@@ -142,7 +156,12 @@ async def test_modify_issue(mocker, get_client):
                 "self": "https://api.tracker.yandex.net/v2/users/1120000000016876",
                 "id": "<employee ID>",
                 "display": "<employee name displayed>",
-            }
+            },
+            {
+                "self": "https://api.tracker.yandex.net/v2/users/1120000000016877",
+                "id": "<employee ID>",
+                "display": "<employee name displayed>",
+            },
         ],
         "createdBy": {
             "self": "https://api.tracker.yandex.net/v2/users/1120000000049224",
@@ -199,6 +218,12 @@ async def test_modify_issue(mocker, get_client):
         body,
     )
     assert isinstance(r, issues.models.IssueModificationResponse)
+    assert r.followers
+    assert len(r.followers) > 1
+    assert r.sprint
+    assert len(r.sprint) > 1
+    assert r.parent
+    assert r.parent.key == "TEST-2"
 
 
 @pytest.mark.asyncio
@@ -209,7 +234,7 @@ async def test_create_issue(mocker, get_client):
         "key": "TREK-9844",
         "version": 7,
         "lastCommentUpdatedAt": "2017-07-18T13:33:44.291+0000",
-        "summary": "subtask",
+        "summary": "Test issue",
         "parent": {
             "self": "https://api.tracker.yandex.net/v2/issues/JUNE-2",
             "id": "593cd0acef7e8a332414f28e",
@@ -232,9 +257,9 @@ async def test_create_issue(mocker, get_client):
         ],
         "type": {
             "self": "https://api.tracker.yandex.net/v2/issuetypes/2",
-            "id": "2",
-            "key": "task",
-            "display": "Issue",
+            "id": "3",
+            "key": "bug",
+            "display": "Bug",
         },
         "priority": {
             "self": "https://api.tracker.yandex.net/v2/priorities/2",
@@ -258,7 +283,7 @@ async def test_create_issue(mocker, get_client):
         "votes": 0,
         "assignee": {
             "self": "https://api.tracker.yandex.net/v2/users/1120000000049224",
-            "id": "<employee ID>",
+            "id": "1120000000049224",
             "display": "<employee name displayed>",
         },
         "queue": {
@@ -284,7 +309,7 @@ async def test_create_issue(mocker, get_client):
     }
     body = issues.IssueCreationRequest(
         summary="Test issue",
-        queue="Trek",
+        queue="TREK",
         parent="JUNE-2",
         type="bug",
         assignee="1120000000049224",
@@ -293,6 +318,11 @@ async def test_create_issue(mocker, get_client):
     mocker.post("https://api.tracker.yandex.net/v2/issues/", payload=resp)
     r = await issues.create(get_client, body)
     assert isinstance(r, issues.models.IssueCreationResponse)
+    assert r.summary == "Test issue"
+    assert r.queue.key == "TREK"
+    assert r.type.key == "bug"
+    assert r.assignee
+    assert r.assignee.id == "1120000000049224"
 
 
 @pytest.mark.asyncio
@@ -377,6 +407,11 @@ async def test_move_issue(mocker, get_client):
         dest_queue="NEW",
     )
     assert isinstance(r, issues.IssueMoveResponse)
+    assert r.key == "NEW-1"
+    assert r.previous_queue
+    assert r.previous_queue.key == "TEST"
+    assert r.previous_status
+    assert r.previous_status.key == "open"
 
 
 @pytest.mark.asyncio
@@ -481,6 +516,7 @@ async def test_search_issues(mocker, get_client):
         get_client,
         data=issues.IssueSearchRequest(filter={"queue": "TREK"}),
     ):
+        assert isinstance(issues_list, list)
         assert all(
             isinstance(issue, issues.IssueSearchResponse) for issue in issues_list
         )
