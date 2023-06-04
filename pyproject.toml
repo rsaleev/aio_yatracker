@@ -13,7 +13,7 @@ python = "^3.11"
 tenacity = "^8.2.2"
 
 [tool.poetry.group.dev.dependencies]
-aioresponses = {git = "https://github.com/rsaleev/aioresponses", branch = "master"}
+aioresponses = {git = "https://github.com/rsaleev/aioresponses.git", branch = "master"}
 pytest = "^7.3.1"
 pytest-asyncio = "^0.21.0"
 pytest-dotenv = "^0.5.2"
