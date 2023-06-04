@@ -14,14 +14,16 @@ Project is still in development. Main approach to implement all API methods
 
 ```python
 import asyncio
-from aio_tracker import issues
-from aio_tracker.base import TrackerClient
+from aiotracker import issues
 
-async def main():
-    async with BaseClient(os.environ['YANDEX_TOKEN'], os.environ['TRACKER_ORG_ID']) as client:
-        issues = await issues.search(client, 'TESTCLIENT') # returns AsyncGenerator
-        async for issue in issues: # Pydantic object
+async def main()
+    async with BaseClient(token="<APP TOKEN>", org_id="<TRACKER ORGANIZATION ID>") as client:
+        #https://cloud.yandex.com/en/docs/tracker/concepts/issues/search-issues
+        async for result in issues.search(client, data=issues.IssueSearchRequest(filter={"queue": "TEST", "assignee": "Empty()"}))
+            for issue in result:
             ...
+
+            
 asyncio.run(main())
 
 ```
