@@ -124,6 +124,7 @@ class ChecklistItem(TrackerModel):
     checked: bool
     checklist_item_type: str
 
+
 class Checklist(TrackerModel):
     self: str
     id: str
@@ -181,11 +182,45 @@ class ProjectStatus(StrEnum):
 
 
 class CommentType(StrEnum):
-    STANDART = "STANDART"
-    INCOMING = "INCOMING"
-    OUTCOMING = "OUTCOMING"
+    STANDARD = "standard"
+    INCOMING = "incoming"
+    OUTCOMING = "outcoming"
 
 
 class Transport(StrEnum):
     INTERNAL = "internal"
     EMAIL = "email"
+
+
+class Comment(TrackerModel):
+    self: str
+    id: int
+    long_id: str
+    text: str
+    created_at: datetime
+    updated_at: datetime
+    summonees: typing.Optional[typing.List[Attributes4]]
+    maillist_summonees: typing.Optional[typing.List[Attributes4]]
+    version: int
+    type: typing.Union[
+        typing.Literal[CommentType.INCOMING],
+        typing.Literal[CommentType.OUTCOMING],
+        typing.Literal[CommentType.STANDARD],
+    ]
+    transport: typing.Union[
+        typing.Literal[Transport.INTERNAL], typing.Literal[Transport.EMAIL]
+    ]
+
+
+class MacrosFieldChanges(TrackerModel):
+    field: typing.Union[str, Attributes4]
+    value: typing.Union[str, typing.List[str]]
+
+
+class Macros(TrackerModel):
+    self: str
+    id: int
+    queue: Attributes4
+    name: str
+    body: str
+    field_changes: typing.List[MacrosFieldChanges]
