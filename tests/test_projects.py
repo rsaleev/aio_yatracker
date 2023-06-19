@@ -204,7 +204,7 @@ async def test_edit_project(mocker, get_client):
         "endDate": "2020-12-16",
     }
     pattern = re.compile(
-        r"(^https://api.tracker.yandex.net/v2/projects/9?version=1)(\?expand=queues)"
+        r"(^https://api.tracker.yandex.net/v2/projects/9\?version=1)(expand=queues)?$"
     )
     mocker.put(pattern, payload=resp)
     r = await projects.edit(
@@ -219,4 +219,5 @@ async def test_edit_project(mocker, get_client):
 @pytest.mark.asyncio
 async def test_delete_queues(mocker, get_client):
     mocker.delete("https://api.tracker.yandex.net/v2/projects/9")
-    await projects.query.delete(get_client, "9")
+    await projects.queries.delete(get_client, "9")
+

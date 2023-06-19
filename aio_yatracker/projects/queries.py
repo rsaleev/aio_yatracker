@@ -184,16 +184,16 @@ async def edit(
     :type client: BaseClient
     :param project_id: e.g. 1
     :type project_id: str
-    :param version: _e.g. 1
+    :param version: e.g. 1
     :type version: int
-    :param data: _request body_
+    :param data: request body
     :type data: ProjectEditRequest
-    :return: _description_
+    :return: _description
     :rtype: ProjectEditResponse
     """
     url = f"{ENDPOINT}/{project_id}"
     params = {}
-    params["version"] = version
+    params["version"] = str(version)
     if queues:
         params["expand"] = "queues"
     response = await client.put(url=url, data=data, params=params)

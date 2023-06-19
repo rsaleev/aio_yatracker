@@ -1,2 +1,2 @@
 from .models import *
-from .query import create, delete, edit, get, list, queues
+from .queries import create, delete, edit, get, list, queues

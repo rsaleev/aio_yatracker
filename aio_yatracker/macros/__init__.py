@@ -1,2 +1,2 @@
-from .query import list, get
+from .queries import list, get
 from .models import * 

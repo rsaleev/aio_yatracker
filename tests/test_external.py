@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from aio_yatracker import external_links
+from aio_yatracker import external
 from aio_yatracker.common import Relationship
 
 
@@ -20,10 +20,10 @@ async def test_list_applications(mocker, get_client):
         r"(^https://api.tracker.yandex.net/v2/applications)(\?page=\d*&perPage=\d*)?"
     )
     mocker.get(pattern, payload=resp, repeat=True)
-    async for applications_list in external_links.applications(get_client):
+    async for applications_list in external.applications(get_client):
         assert all(
             [
-                isinstance(item, external_links.ApplicationLinkResponse)
+                isinstance(item, external.ApplicationLinkResponse)
                 for item in applications_list
             ]
         )
@@ -71,9 +71,9 @@ async def test_list_issues(mocker, get_client):
         r"(^https://api.tracker.yandex.net/v2/issues/TEST-1/remotelinks)(\?page=\d*&perPage=\d*)?"
     )
     mocker.get(pattern, payload=resp, repeat=True)
-    async for issues_list in external_links.issues(get_client, "TEST-1"):
+    async for issues_list in external.issues(get_client, "TEST-1"):
         assert all(
-            [isinstance(item, external_links.IssueLinkResponse) for item in issues_list]
+            [isinstance(item, external.IssueLinkResponse) for item in issues_list]
         )
 
 
@@ -117,19 +117,19 @@ async def test_add_external_link(mocker, get_client):
         "https://api.tracker.yandex.net/v2/issues/TEST-1/remotelinks?backlink=true",
         payload=resp,
     )
-    r = await external_links.add(
+    r = await external.add(
         get_client,
         "TEST-1",
-        external_links.IssueLinkRequest(
+        external.IssueLinkRequest(
             relationship=Relationship.RELATES,
             key="<object key>",
             origin="<application ID>",
         ),
     )
-    assert isinstance(r, external_links.IssueLinkResponse)
+    assert isinstance(r, external.IssueLinkResponse)
 
 
 @pytest.mark.asyncio
 async def test_remove_external_link(mocker, get_client):
     mocker.delete("https://api.tracker.yandex.net/v2/issues/TEST-1/remotelinks/12345")
-    await external_links.remove(get_client, "TEST-1", 12345)
+    await external.remove(get_client, "TEST-1", 12345)
