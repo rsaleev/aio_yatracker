@@ -1,4 +1,5 @@
 import typing
+import os
 from datetime import datetime
 from types import TracebackType
 
@@ -74,7 +75,7 @@ class BaseClient:
         return await self._session.get(
             f"/{self._version}/{url}",
             params=params,
-        )
+        )        
 
     async def post(
         self,
