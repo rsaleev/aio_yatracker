@@ -224,3 +224,30 @@ class Macros(TrackerModel):
     name: str
     body: str
     field_changes: typing.List[MacrosFieldChanges]
+
+
+class QueueIssueTypeConfig(TrackerModel):
+    issue_type: typing.Union[str, Attributes4]
+    workflow: typing.Union[str, Attributes4]
+    resolutions: typing.List[typing.Union[str, Attributes4]]
+
+
+class Queue(TrackerModel):
+    self: str
+    id: int
+    key: str
+    version: int
+    name: str
+    description: str
+    lead: Attributes4
+    assign_auto: bool
+    default_type: Attributes6
+    default_priority: Attributes6
+    team_users: typing.Optional[typing.List[Attributes6]]
+    issue_types: typing.List[Attributes6]
+    versions: typing.Optional[typing.List[Attributes4]]
+    workflows: typing.Optional[typing.Dict[str, typing.List[Attributes4]]]
+    deny_voting: bool
+    issue_type_config: typing.Optional[typing.List[typing.Dict[str, Attributes4]]]
+    components:typing.Optional[typing.List[Attributes4]]
+    fields:typing.Optional[typing.List[Attributes4]]
