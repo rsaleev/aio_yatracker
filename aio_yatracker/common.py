@@ -84,6 +84,10 @@ class Attributes7(TrackerModel):
 class Attributes8(TrackerModel):
     key: str
 
+class Board(TrackerModel):
+    id: int
+    name: str
+
 
 class IssueModel(TrackerModel):
     self: str
@@ -95,11 +99,11 @@ class IssueModel(TrackerModel):
     parent: typing.Optional[Attributes5]
     aliases: typing.Optional[typing.List[str]]
     description: typing.Optional[str]
-    sprint: typing.Optional[typing.List[Attributes4]] = []
+    sprint: typing.Optional[typing.List[Attributes4]]
     type: Attributes6
     priority: Attributes6
     created_at: datetime
-    followers: typing.Optional[typing.List[Attributes4]] = []
+    followers: typing.Optional[typing.List[Attributes4]]
     created_by: Attributes4
     votes: typing.Optional[int]
     assignee: typing.Optional[typing.Optional[Attributes4]]
@@ -108,6 +112,36 @@ class IssueModel(TrackerModel):
     status: Attributes6
     previous_status: typing.Optional[Attributes6]
     favorite: bool
+    epic:typing.Optional[Attributes4]
+    start:typing.Optional[datetime]
+    tags:typing.Optional[typing.List[str]]
+    end:typing.Optional[datetime]
+    comment_without_external_message_count:typing.Optional[int]
+    comment_with_external_message_count:typing.Optional[int]
+    previous_status_last_assignee: typing.Optional[Attributes4]
+    story_points: typing.Optional[int]
+    boards: typing.Optional[typing.List[Board]]
+    project: typing.Optional[Attributes4]
+    deadline: typing.Optional[str]
+    components: typing.Optional[typing.List[Attributes4]]
+    original_estimation: typing.Optional[str]
+    spent: typing.Optional[str]
+    estimaion: typing.Optional[str]
+    checklist_done: typing.Optional[int]
+    checklist_total: typing.Optional[int]
+    sla: typing.Optional[str]
+    email_to: typing.Optional[str]
+    email_from: typing.Optional[str]
+    pending_reply_from: typing.Optional[
+        typing.Union[Attributes4, typing.List[Attributes4]]
+    ]
+    voted_by: typing.Optional[typing.Union[Attributes4, typing.List[Attributes4]]]
+    previous_queue: typing.Optional[Attributes6]
+    resolved_at: typing.Optional[datetime]
+    resolved_by: typing.Optional[Attributes4]
+    resolution: typing.Optional[Attributes6]
+    last_queue: typing.Optional[Attributes6]
+    
 
     _validate_created_at = validator("created_at", allow_reuse=True, pre=True)(
         convert_iso_8601_to_datetime
@@ -227,9 +261,9 @@ class Macros(TrackerModel):
 
 
 class QueueIssueTypeConfig(TrackerModel):
-    issue_type: typing.Union[str, Attributes4]
-    workflow: typing.Union[str, Attributes4]
-    resolutions: typing.List[typing.Union[str, Attributes4]]
+    issue_type: Attributes6
+    workflow: Attributes4
+    resolutions: typing.List[Attributes4]
 
 
 class Queue(TrackerModel):
@@ -238,16 +272,17 @@ class Queue(TrackerModel):
     key: str
     version: int
     name: str
-    description: str
+    description: typing.Optional[str]
     lead: Attributes4
     assign_auto: bool
+    allow_externals: typing.Optional[bool]
     default_type: Attributes6
     default_priority: Attributes6
-    team_users: typing.Optional[typing.List[Attributes6]]
-    issue_types: typing.List[Attributes6]
+    team_users: typing.Optional[typing.List[Attributes4]]
+    issue_types: typing.Optional[typing.List[Attributes6]]
     versions: typing.Optional[typing.List[Attributes4]]
     workflows: typing.Optional[typing.Dict[str, typing.List[Attributes4]]]
-    deny_voting: bool
-    issue_type_config: typing.Optional[typing.List[typing.Dict[str, Attributes4]]]
-    components:typing.Optional[typing.List[Attributes4]]
-    fields:typing.Optional[typing.List[Attributes4]]
+    deny_voting: typing.Optional[bool]
+    issue_types_config: typing.Optional[typing.List[QueueIssueTypeConfig]]
+    components: typing.Optional[typing.List[Attributes4]]
+    fields: typing.Optional[typing.List[Attributes4]]
