@@ -239,7 +239,7 @@ async def create_auto_action(
     :return: response data
     :rtype: QueueAutoActionResponse
     """
-    url = f"{ENDPOINT}/queues/{queue_id}/autoactions"
+    url = f"{ENDPOINT}/{queue_id}/autoactions"
     response = await client.post(url, data=data)
     response_data = await response.json()
     response.close()
@@ -261,7 +261,7 @@ async def get_auto_action(
     :return: response body
     :rtype: QueueAutoActionResponse
     """
-    url = f"{ENDPOINT}/queues/{queue_id}/autoactions/{auto_action_id}"
+    url = f"{ENDPOINT}/{queue_id}/autoactions/{auto_action_id}"
     response = await client.post(url=url, data=None)
     response_data = await response.json()
     response.close()
@@ -283,7 +283,7 @@ async def create_trigger(
     :return: response data
     :rtype: QueueTriggerResponse
     """
-    url = f"{ENDPOINT}/queues/{queue_id}/triggers"
+    url = f"{ENDPOINT}/{queue_id}/triggers"
     response = await client.post(url, data=data)
     response_data = await response.json()
     response.close()
@@ -306,8 +306,11 @@ async def get_trigger(
     :rtype: QueueTriggerResponse
     """
 
-    url = f"{ENDPOINT}/queues/{queue_id}/triggers/{trigger_id}"
+    url = f"{ENDPOINT}/{queue_id}/triggers/{trigger_id}"
     response = await client.get(url)
     response_data = await response.json()
     response.close()
     return QueueTriggerResponse.parse_obj(response_data)
+
+
+

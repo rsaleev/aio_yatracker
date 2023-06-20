@@ -1,6 +1,8 @@
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
+from pydantic import Field
+
 from ..base import TrackerModel
 from ..common import Attributes4, Attributes6, Queue, QueueIssueTypeConfig
 
@@ -26,7 +28,7 @@ class QueueVersionResponse(TrackerModel):
     name: str
     description: str
     start_date: date
-    due_date: date
+    due_date: Optional[date]
     released: bool
     archived: bool
 
@@ -47,7 +49,7 @@ class QueueFieldsResponse(TrackerModel):
     id: str
     name: str
     version: int
-    schema: QueueFieldsSchema
+    schema_: QueueFieldsSchema = Field(alias="schema")
     readonly: bool
     options: bool
     suggest: bool
@@ -63,7 +65,7 @@ class QueueTagsRequest(TrackerModel):
 class QueueAutoActionRequest(TrackerModel):
     name: str
     filter: Dict[str, Any]
-    actions: Dict[str, Any]
+    actions: List[Dict[str, Any]]
 
 
 class QueueAutoActionResponse(TrackerModel):
@@ -118,4 +120,7 @@ __all__ = [
     "QueueAutoActionResponse",
     "QueueTriggerRequest",
     "QueueTriggerResponse",
+    "Attributes4",
+    "Attributes6",
+    "QueueIssueTypeConfig",
 ]
