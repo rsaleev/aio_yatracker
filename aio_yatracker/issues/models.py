@@ -69,8 +69,6 @@ class IssueMoveResponse(IssueModel):
     previous_queue: Attributes6
     previous_status: typing.Optional[Attributes6]
 
- 
-
 
 class IssueCountRequest(TrackerModel):
     filter: typing.Dict[str, typing.Any]
@@ -108,11 +106,38 @@ class IssueTransitionOperationResponse(Attributes7):
 class IssueChangelogField(TrackerModel):
     field: Attributes4 | None
     from_state: typing.Optional[
-        typing.Union[Attributes4, str, typing.List[typing.Any]]
+        typing.Union[
+            str,
+            Attributes6,
+            typing.List[Attributes6],
+            Attributes4,
+            typing.List[Attributes4],
+            typing.List[str],
+            typing.List[typing.Dict[str, typing.Any]],
+        ]
     ] = Field(default=None, alias="from")
     to_state: typing.Optional[
-        typing.Union[Attributes4, str, typing.List[typing.Any]]
+        typing.Union[
+            str,
+            Attributes6,
+            typing.List[Attributes6],
+            Attributes4,
+            typing.List[Attributes4],
+            typing.List[str],
+            typing.List[typing.Dict[str, typing.Any]],
+        ]
     ] = Field(default=None, alias="to")
+
+
+class IssueChangelogComments(TrackerModel):
+    added: typing.Optional[typing.List[Attributes4]]
+    deleted: typing.Optional[typing.List[Attributes4]]
+
+
+class IssueChangeTriggers(TrackerModel):
+    trigger: Attributes4
+    success: bool
+    message: str
 
 
 class IssueChangelogResponse(TrackerModel):
@@ -145,6 +170,8 @@ class IssueChangelogResponse(TrackerModel):
     ]
     transport: str
     fields: typing.Optional[typing.List[IssueChangelogField]]
+    comments: typing.Optional[IssueChangelogComments]
+    executed_triggers: typing.Optional[typing.List[IssueChangeTriggers]]
 
 
 class IssueRelationshipCreateRequest(TrackerModel):
