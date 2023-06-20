@@ -4,8 +4,9 @@ from tempfile import NamedTemporaryFile
 from typing import AsyncGenerator
 
 import aiofiles
+from aiohttp import FormData
 
-from ..base import BaseClient, FormData, RequestParams
+from ..base import BaseClient, RequestParams
 from .models import Attachment
 
 ENDPOINT = "issues"
